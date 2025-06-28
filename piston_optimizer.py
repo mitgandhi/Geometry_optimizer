@@ -336,7 +336,7 @@ class PistonOptimizer:
             process = subprocess.Popen(
                 f'"{exe_path}"',
                 cwd=sim_folder,
-                stdout=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
                 stderr=subprocess.PIPE,
                 text=True
             )
@@ -348,8 +348,11 @@ class PistonOptimizer:
 
             if not success:
                 process.kill()
+                stdout_data, stderr_data = process.communicate()
                 process.wait()
-                raise RuntimeError(f"Could not set multi-core affinity")
+                raise RuntimeError(
+                    f"Could not set multi-core affinity: {stderr_data}"
+                )
 
             # Monitor process without timeout - wait indefinitely for completion
             print(f"🕐 Waiting for process {process.pid} to complete (no timeout)...")
@@ -371,12 +374,14 @@ class PistonOptimizer:
 
                 time.sleep(check_interval)
 
-            # Process finished - check exit code
+            # Process finished - read outputs and check exit code
+            stdout_data, stderr_data = process.communicate()
             return_code = process.returncode
 
             if return_code != 0:
-                stdout, stderr = process.communicate()
-                raise RuntimeError(f"fsti_gap.exe failed with code {return_code}: {stderr}")
+                raise RuntimeError(
+                    f"fsti_gap.exe failed with code {return_code}: {stderr_data}"
+                )
 
             print(f"✓ fsti_gap.exe completed successfully on cores {all_cores_except_0}")
 
@@ -384,8 +389,9 @@ class PistonOptimizer:
             try:
                 if 'process' in locals():
                     process.kill()
+                    stdout_data, stderr_data = process.communicate()
                     process.wait()
-            except:
+            except Exception:
                 pass
             raise RuntimeError(f"Error running fsti_gap.exe: {e}")
 
