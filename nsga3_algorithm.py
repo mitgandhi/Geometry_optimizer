@@ -227,7 +227,7 @@ class SimpleNSGA3:
 
         # Build subsequent fronts
         current_front = 0
-        while fronts[current_front]:
+        while current_front < len(fronts) and fronts[current_front]:
             next_front = []
             for i in fronts[current_front]:
                 for j in dominated_solutions[i]:
@@ -645,7 +645,7 @@ class AdvancedNSGA3:
                 fronts[0].append(i)
 
         current_front = 0
-        while fronts[current_front]:
+        while current_front < len(fronts) and fronts[current_front]:
             next_front = []
             for i in fronts[current_front]:
                 for j in dominated_solutions[i]:
