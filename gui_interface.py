@@ -1170,17 +1170,29 @@ The optimization will run while the GUI remains open.
         self.current_eval_label = ttk.Label(eval_frame, text="No evaluation running", font=('Arial', 10))
         self.current_eval_label.pack(anchor='w', pady=2)
 
-        # Results display
+        # Results display with notebook for text and plot
         results_frame = ttk.LabelFrame(self.progress_window, text="Live Results", padding=10)
         results_frame.pack(fill='both', expand=True, padx=10, pady=5)
 
-        self.results_text = tk.Text(results_frame, height=15, width=80)
+        self.results_notebook = ttk.Notebook(results_frame)
+        self.results_notebook.pack(fill='both', expand=True)
+
+        text_tab = ttk.Frame(self.results_notebook)
+        plot_tab = ttk.Frame(self.results_notebook)
+        self.results_notebook.add(text_tab, text="Log")
+        self.results_notebook.add(plot_tab, text="Plot")
+
+        self.results_text = tk.Text(text_tab, height=15, width=80)
         self.results_text.pack(fill='both', expand=True, pady=5)
 
-        # Scrollbar for results
-        scrollbar = ttk.Scrollbar(results_frame, orient="vertical", command=self.results_text.yview)
+        # Scrollbar for results text
+        scrollbar = ttk.Scrollbar(text_tab, orient="vertical", command=self.results_text.yview)
         scrollbar.pack(side="right", fill="y")
         self.results_text.configure(yscrollcommand=scrollbar.set)
+
+        # Keep reference to plot tab for later
+        self.plot_tab = plot_tab
+        self.plot_canvas = None
 
         # Control buttons
         button_frame = ttk.Frame(self.progress_window)
@@ -1278,13 +1290,14 @@ The optimization will run while the GUI remains open.
             if best_individuals:
                 self.update_status("Optimization completed successfully!")
                 self.update_results(f"\n✓ Found {len(best_individuals)} Pareto optimal solutions")
-
+                
                 # Save results
                 optimizer.save_results(best_individuals, best_objectives, algorithm_type=self.config['algorithm_type'])
                 report_file = optimizer.generate_summary_report(best_individuals, best_objectives, self.config)
 
                 self.update_results(f"✓ Results saved to optimization folder")
                 self.update_results(f"✓ Summary report: {report_file}")
+                self.display_pareto_plot(best_objectives)
             else:
                 self.update_status("Optimization completed - No valid solutions found")
                 self.update_results("\n✗ No valid solutions found!")
@@ -1346,6 +1359,24 @@ The optimization will run while the GUI remains open.
             if hasattr(self, 'results_text'):
                 self.results_text.insert(tk.END, result_text + "\n")
                 self.results_text.see(tk.END)
+
+        self.root.after(0, update)
+
+    def display_pareto_plot(self, objectives):
+        """Display Pareto scatter plot in the plot tab"""
+        try:
+            from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+            from visualization import create_pareto_plot
+        except Exception:
+            return
+
+        def update():
+            fig = create_pareto_plot(objectives)
+            if self.plot_canvas:
+                self.plot_canvas.get_tk_widget().destroy()
+            self.plot_canvas = FigureCanvasTkAgg(fig, master=self.plot_tab)
+            self.plot_canvas.draw()
+            self.plot_canvas.get_tk_widget().pack(fill='both', expand=True)
 
         self.root.after(0, update)
 
