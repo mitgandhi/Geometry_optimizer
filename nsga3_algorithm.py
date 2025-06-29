@@ -187,6 +187,10 @@ class SimpleNSGA3:
         core_usage = Counter(core_assignments)
         print(f"Core usage distribution: {dict(sorted(core_usage.items()))}")
 
+        # Temporarily remove GUI callback to avoid pickling issues
+        original_callback = self.optimizer.progress_callback
+        self.optimizer.progress_callback = None
+
         # Run ALL evaluations in parallel using ALL available cores
         print(f"Starting parallel execution on {len(self.available_cores)} cores (NO TIMEOUT)...")
         print(f"Pool size will be: {len(self.available_cores)} processes")
@@ -197,6 +201,9 @@ class SimpleNSGA3:
             print(f"Each simulation will run until natural completion")
             results = pool.map(evaluate_individual_wrapper, eval_args)
             print(f"✓ All {len(population)} evaluations completed")
+
+        # Restore original callback
+        self.optimizer.progress_callback = original_callback
 
         return np.array(results)
 
@@ -475,10 +482,17 @@ class AdvancedNSGA3:
             core_id = self.available_cores[i % len(self.available_cores)]
             eval_args.append((self.optimizer, i, individual, generation, core_id, "Advanced", self.fixed_params))
 
+        # Temporarily remove GUI callback to avoid pickling issues
+        original_callback = self.optimizer.progress_callback
+        self.optimizer.progress_callback = None
+
         # Run evaluations in parallel without timeout
         print(f"Running evaluations on {len(self.available_cores)} cores - NO TIMEOUT")
         with mp.get_context('spawn').Pool(processes=len(self.available_cores)) as pool:
             results = pool.map(evaluate_individual_wrapper, eval_args)
+
+        # Restore original callback
+        self.optimizer.progress_callback = original_callback
 
         return np.array(results)
 
