@@ -309,7 +309,7 @@ class SimpleNSGA3:
                         LZ0_calc = self.fixed_params.get('LZ', 21.358) - lF_val
                         lK_val = (
                             self.fixed_params.get('standard_LK', 70.0)
-                            + (self.fixed_params.get('standard_LKG', 51.62) - LKG_val)
+                           - (self.fixed_params.get('standard_LKG', 51.62) - LKG_val)
                         )
                         calc_info = f"    LZ0={LZ0_calc:.3f}, lK={lK_val:.3f}"
                         print(calc_info)
@@ -594,7 +594,7 @@ class AdvancedNSGA3:
                         LZ0_calc = self.fixed_params.get('LZ', 21.358) - lF_val
                         lK_val = (
                             self.fixed_params.get('standard_LK', 70.0)
-                            + (self.fixed_params.get('standard_LKG', 51.62) - LKG_val)
+                           - (self.fixed_params.get('standard_LKG', 51.62) - LKG_val)
                         )
                         calc_info = f"    LZ0={LZ0_calc:.3f}, lK={lK_val:.3f}"
                         print(calc_info)
