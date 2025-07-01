@@ -1,0 +1,7 @@
+numpy
+pandas
+psutil
+matplotlib
+scipy
+scikit-learn
+pywin32 ; platform_system == "Windows"
