@@ -9,6 +9,7 @@ The main entry point is `main.py` which exposes a GUI as well as CLI helpers. It
 - **Constraint management** provided by `constraints.py` to enforce custom parameter constraints.
 - **CPU affinity utilities** (`cpu_affinity.py`) that ensure simulations avoid using the first CPU core.
 - **Piston simulation wrapper** in `piston_optimizer.py` that manages execution of `fsti_gap.exe`.
+- **Post-optimization plotting** provided by `plot_parameter_evolution.py` to visualize parameter trends.
 
 A small `tests/` folder is provided with a pytest test for the Pareto domination sort implementation.
 
@@ -47,6 +48,7 @@ The test suite currently only covers the domination sort routine but can be exte
 ```
 Readme.md                 gui_interface.py     tests/
 bayesian_optimization.py  main.py              visualization.py
+plot_parameter_evolution.py
 constraints.py            nsga3_algorithm.py
 cpu_affinity.py           piston_optimizer.py
 ```
