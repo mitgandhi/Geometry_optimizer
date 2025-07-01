@@ -52,6 +52,13 @@ class ConstraintManager:
             'max_difference': 0.8
         })
 
+        # Constraint 3: zeta must be even
+        self.add_constraint(
+            name="zeta_even",
+            constraint_func=lambda params: int(params['zeta']) % 2 == 0,
+            description="zeta must be an even integer",
+        )
+
     def add_constraint(self, name, constraint_func, description=""):
         """
         Add a custom constraint
@@ -188,6 +195,17 @@ class ConstraintManager:
                 'lF': random.uniform(normalized_bounds['lF']['min'], normalized_bounds['lF']['max']),
                 'zeta': random.randint(normalized_bounds['zeta']['min'], normalized_bounds['zeta']['max'])
             }
+
+
+            # Round zeta to nearest even value within bounds
+            zmin = normalized_bounds['zeta']['min']
+            zmax = normalized_bounds['zeta']['max']
+            zeta_even = int(round(params['zeta'] / 2.0)) * 2
+            if zeta_even < zmin:
+                zeta_even = zmin if zmin % 2 == 0 else zmin + 1
+            if zeta_even > zmax:
+                zeta_even = zmax if zmax % 2 == 0 else zmax - 1
+            params['zeta'] = zeta_even
 
             
 
