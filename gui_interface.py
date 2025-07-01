@@ -259,7 +259,7 @@ class OptimizationGUI:
         # Description
         desc_text = """These fixed parameters are used for calculating LZ0 and lK values during optimization:
 • LZ0 = LZ - lF (calculated for each iteration)
-• lK = Standard LK + (Standard LKG - LKG) (calculated for each iteration)"""
+• lK = Standard LK - (Standard LKG - LKG) (calculated for each iteration)"""
 
         desc_label = ttk.Label(main_frame, text=desc_text, justify='left', foreground='blue')
         desc_label.pack(anchor='w', pady=(0, 10))
@@ -1288,7 +1288,7 @@ The optimization will run while the GUI remains open.
             if best_individuals:
                 self.update_status("Optimization completed successfully!")
                 self.update_results(f"\n✓ Found {len(best_individuals)} Pareto optimal solutions")
-                
+
                 # Save results
                 optimizer.save_results(best_individuals, best_objectives, algorithm_type=self.config['algorithm_type'])
                 report_file = optimizer.generate_summary_report(best_individuals, best_objectives, self.config)
