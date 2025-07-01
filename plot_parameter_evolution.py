@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 
 PARAM_PATTERN = re.compile(
-    r"dK(?P<dK>[-\d\.]+)_dZ(?P<dZ>[-\d\.]+)_lK(?P<lK>[-\d\.]+)_lF(?P<lF>[-\d\.]+)_zeta(?P<zeta>[-\d\.]+)"
+    r"dK(?P<dK>[-\d\.]+)_dZ(?P<dZ>[-\d\.]+)_LKG(?P<LKG>[-\d\.]+)_lF(?P<lF>[-\d\.]+)_zeta(?P<zeta>[-\d\.]+)"
 )
 
 

@@ -157,17 +157,17 @@ class PistonOptimizer:
 
         return sim_folder
 
-    def modify_input_files(self, sim_folder, dK, dZ, lK, lF, zeta, fixed_params=None):
+    def modify_input_files(self, sim_folder, dK, dZ, LKG, lF, zeta, fixed_params=None):
         """
         Modify input files with new parameter values including LZ0 and LKG calculations
 
         Args:
             sim_folder: Simulation folder path
-            dK, dZ, lK, lF, zeta: Optimization parameters
+            dK, dZ, LKG, lF, zeta: Optimization parameters
             fixed_params: Dictionary containing fixed parameters:
                 - LZ: Fixed value for LZ0 calculation
-                - longest_gap_length: Fixed value for LKG calculation
-                - max_lK: Maximum lK value for LKG calculation
+                - standard_LKG: Reference LKG value
+                - standard_LK: Reference LK value
         """
         geo_path = sim_folder / 'input' / 'geometry.txt'
         opt_path = sim_folder / 'input' / 'options_piston.txt'
@@ -176,33 +176,35 @@ class PistonOptimizer:
         if fixed_params is None:
             fixed_params = {
                 'LZ': 21.358,  # Default value from geometry.txt
-                'longest_gap_length': 51.62,  # Default value from geometry.txt
-                'max_lK': 70.0  # Default max from bounds
+                'standard_LKG': 51.62,  # Default reference value
+                'standard_LK': 70.0  # Default reference LK
             }
 
         # Calculate LZ0 = LZ - lF
         LZ0_calculated = fixed_params.get('LZ', 21.358) - lF
 
-        # Calculate LKG = longest_gap_length - (max_lK - current_lK)
-        x = fixed_params.get('max_lK', 70.0) - lK
-        LKG_calculated = fixed_params.get('longest_gap_length', 51.62) - x
+        # Derive lK from provided LKG value
+        lK_calculated = (
+            fixed_params.get('standard_LK', 70.0)
+            - (fixed_params.get('standard_LKG', 51.62) - LKG)
+        )
 
         print(f"Calculations for {sim_folder.name}:")
         print(f"  LZ0 = {fixed_params.get('LZ', 21.358)} - {lF} = {LZ0_calculated:.6f}")
         print(
-            f"  LKG = {fixed_params.get('longest_gap_length', 51.62)} - ({fixed_params.get('max_lK', 70.0)} - {lK}) = {LKG_calculated:.6f}")
+            f"  lK = {fixed_params.get('standard_LK', 70.0)} - ({fixed_params.get('standard_LKG', 51.62)} - {LKG}) = {lK_calculated:.6f}")
 
         # Update geometry parameters
         try:
             # Original parameters
             self._replace_in_file(geo_path, 'dK', f"{dK:.6f}")
             self._replace_in_file(geo_path, 'dZ', f"{dZ:.6f}")
-            self._replace_in_file(geo_path, 'lK', f"{lK:.6f}")
+            self._replace_in_file(geo_path, 'lK', f"{lK_calculated:.6f}")
             self._replace_in_file(geo_path, 'lF', f"{lF:.6f}")
 
             # New calculated parameters
             self._replace_in_file(geo_path, 'lZ0', f"{LZ0_calculated:.6f}")
-            self._replace_in_file(geo_path, 'lKG', f"{LKG_calculated:.6f}")
+            self._replace_in_file(geo_path, 'lKG', f"{LKG:.6f}")
 
         except Exception as e:
             print(f"Warning: Could not modify geometry file: {e}")
@@ -423,20 +425,20 @@ class PistonOptimizer:
             print(f"Error parsing results from {piston_path}: {e}")
             raise
 
-    def evaluate_individual(self, individual_id, dK, dZ, lK, lF, zeta, generation=1, core_id=None,
+    def evaluate_individual(self, individual_id, dK, dZ, LKG, lF, zeta, generation=1, core_id=None,
                             algorithm_type="Simple", fixed_params=None):
         """Evaluate a single individual without timeout limits"""
-        param_name = f"ind{individual_id}_dK{dK:.3f}_dZ{dZ:.3f}_lK{lK:.1f}_lF{lF:.1f}_zeta{int(zeta)}"
+        param_name = f"ind{individual_id}_dK{dK:.3f}_dZ{dZ:.3f}_LKG{LKG:.1f}_lF{lF:.1f}_zeta{int(zeta)}"
 
         # Report current evaluation
         if self.progress_callback:
-            self.progress_callback.update_current_evaluation(individual_id, [dK, dZ, lK, lF, zeta])
+            self.progress_callback.update_current_evaluation(individual_id, [dK, dZ, LKG, lF, zeta])
 
         try:
             sim_folder = self.create_simulation_folder(param_name, generation, algorithm_type)
 
-            # Pass fixed_params to modify_input_files for LZ0 and LKG calculations
-            self.modify_input_files(sim_folder, dK, dZ, lK, lF, int(zeta), fixed_params)
+            # Pass fixed_params to modify_input_files for LZ0 and lK calculations
+            self.modify_input_files(sim_folder, dK, dZ, LKG, lF, int(zeta), fixed_params)
 
             # Run simulation without timeout - will run until completion
             self.run_simulation(sim_folder)
@@ -496,7 +498,7 @@ class PistonOptimizer:
         if output_file is None:
             output_file = self.algorithm_folder / "optimization_results.txt"
 
-        param_names = ['dK', 'dZ', 'lK', 'lF', 'zeta']
+        param_names = ['dK', 'dZ', 'LKG', 'lF', 'zeta']
 
         try:
             with open(output_file, 'w') as f:
@@ -566,11 +568,11 @@ class PistonOptimizer:
                     f.write("FIXED PARAMETERS FOR CALCULATIONS:\n")
                     f.write("-" * 35 + "\n")
                     f.write(f"LZ (for LZ0 calculation): {fixed_params.get('LZ', 'Not set')}\n")
-                    f.write(f"Longest Gap Length: {fixed_params.get('longest_gap_length', 'Not set')}\n")
-                    f.write(f"Max lK: {fixed_params.get('max_lK', 'Not set')}\n")
+                    f.write(f"Standard LKG: {fixed_params.get('standard_LKG', 'Not set')}\n")
+                    f.write(f"Standard LK: {fixed_params.get('standard_LK', 'Not set')}\n")
                     f.write("Calculations:\n")
                     f.write("  LZ0 = LZ - lF\n")
-                    f.write("  LKG = longest_gap_length - (max_lK - current_lK)\n\n")
+                    f.write("  lK = standard_LK - (standard_LKG - LKG)\n\n")
 
                 # Constraint information
                 constraints_config = config.get('constraints', {})
@@ -623,7 +625,7 @@ class PistonOptimizer:
                     f.write("DETAILED PARETO FRONT:\n")
                     f.write("-" * 25 + "\n")
 
-                    param_names = ['dK', 'dZ', 'lK', 'lF', 'zeta']
+                    param_names = ['dK', 'dZ', 'LKG', 'lF', 'zeta']
 
                     for i, (individual, objectives) in enumerate(zip(best_individuals, best_objectives)):
                         f.write(f"\nSolution {i + 1}:\n")
@@ -643,12 +645,14 @@ class PistonOptimizer:
                         # Show calculated values
                         if fixed_params:
                             lF_val = individual[3]  # lF is at index 3
-                            lK_val = individual[2]  # lK is at index 2
+                            LKG_val = individual[2]  # LKG is at index 2
                             LZ0_calc = fixed_params.get('LZ', 21.358) - lF_val
-                            x = fixed_params.get('max_lK', 70.0) - lK_val
-                            LKG_calc = fixed_params.get('longest_gap_length', 51.62) - x
+                            lK_val = (
+                                fixed_params.get('standard_LK', 70.0)
+                                - (fixed_params.get('standard_LKG', 51.62) - LKG_val)
+                            )
                             f.write(f"  Calculated LZ0: {LZ0_calc:.6f}\n")
-                            f.write(f"  Calculated LKG: {LKG_calc:.6f}\n")
+                            f.write(f"  Calculated lK: {lK_val:.6f}\n")
 
                 else:
                     f.write("No valid solutions found!\n")

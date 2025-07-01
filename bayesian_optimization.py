@@ -90,18 +90,20 @@ def evaluate_individual_wrapper_bo(args):
             raise FileNotFoundError(f"Optimization folder does not exist: {optimization_folder}")
 
         # Run evaluation with detailed parameter logging
-        dK, dZ, lK, lF, zeta = params
-        print(f"BO Worker {individual_id} evaluating: dK={dK:.6f}, dZ={dZ:.6f}, lK={lK:.6f}, lF={lF:.6f}, zeta={int(zeta)}")
+        dK, dZ, LKG, lF, zeta = params
+        print(f"BO Worker {individual_id} evaluating: dK={dK:.6f}, dZ={dZ:.6f}, LKG={LKG:.6f}, lF={lF:.6f}, zeta={int(zeta)}")
 
         # Calculate and display LZ0 and LKG values
         if fixed_params:
             LZ0_calc = fixed_params.get('LZ', 21.358) - lF
-            x = fixed_params.get('max_lK', 70.0) - lK
-            LKG_calc = fixed_params.get('longest_gap_length', 51.62) - x
-            print(f"BO Worker {individual_id} calculations: LZ0={LZ0_calc:.6f}, LKG={LKG_calc:.6f}")
+            lK_val = (
+                fixed_params.get('standard_LK', 70.0)
+                - (fixed_params.get('standard_LKG', 51.62) - LKG)
+            )
+            print(f"BO Worker {individual_id} calculations: LZ0={LZ0_calc:.6f}, lK={lK_val:.6f}")
 
         result = worker_optimizer.evaluate_individual(
-            individual_id, dK, dZ, lK, lF, zeta, iteration,
+            individual_id, dK, dZ, LKG, lF, zeta, iteration,
             algorithm_type="Bayesian", fixed_params=fixed_params
         )
 
@@ -150,7 +152,7 @@ class BayesianOptimization:
             self.batch_size = max(1, min(batch_size, len(self.available_cores)))
 
         # Parameter info
-        self.param_names = ['dK', 'dZ', 'lK', 'lF', 'zeta']
+        self.param_names = ['dK', 'dZ', 'LKG', 'lF', 'zeta']
         self.n_params = len(self.param_names)
 
         # Create bounds arrays for optimization
@@ -267,16 +269,15 @@ class BayesianOptimization:
         else:
             # Fallback: generate random and repair
             print("⚠️ BO: Could not generate valid individual, using repair method")
-            zmin = self.param_bounds['zeta']['min']
-            if zmin % 2 != 0:
-                zmin += 1
+
             individual = np.array([
                 random.uniform(self.param_bounds['dK']['min'], self.param_bounds['dK']['max']),
                 random.uniform(self.param_bounds['dZ']['min'], self.param_bounds['dZ']['max']),
-                random.uniform(self.param_bounds['lK']['min'], self.param_bounds['lK']['max']),
+                random.uniform(self.param_bounds['LKG']['min'], self.param_bounds['LKG']['max']),
                 random.uniform(self.param_bounds['lF']['min'], self.param_bounds['lF']['max']),
-                random.choice(list(range(zmin, self.param_bounds['zeta']['max'] + 1, 2)))
+                random.randint(self.param_bounds['zeta']['min'], self.param_bounds['zeta']['max'])
             ])
+
 
             param_dict = {self.param_names[i]: individual[i] for i in range(len(self.param_names))}
             repaired = self.constraint_manager.repair_parameters(param_dict, self.param_bounds)
@@ -327,15 +328,17 @@ class BayesianOptimization:
         # Display batch details
         print(f"\nBO: Batch Details:")
         for i, individual in enumerate(valid_batch):
-            dK, dZ, lK, lF, zeta = individual
-            print(f"  Individual {i}: dK={dK:.4f}, dZ={dZ:.4f}, lK={lK:.2f}, lF={lF:.2f}, zeta={int(zeta)}")
+            dK, dZ, LKG, lF, zeta = individual
+            print(f"  Individual {i}: dK={dK:.4f}, dZ={dZ:.4f}, LKG={LKG:.2f}, lF={lF:.2f}, zeta={int(zeta)}")
 
             # Show calculated values
             if self.fixed_params:
                 LZ0_calc = self.fixed_params.get('LZ', 21.358) - lF
-                x = self.fixed_params.get('max_lK', 70.0) - lK
-                LKG_calc = self.fixed_params.get('longest_gap_length', 51.62) - x
-                print(f"    Calculated: LZ0={LZ0_calc:.4f}, LKG={LKG_calc:.4f}")
+                lK_val = (
+                    self.fixed_params.get('standard_LK', 70.0)
+                    - (self.fixed_params.get('standard_LKG', 51.62) - LKG)
+                )
+                print(f"    Calculated: LZ0={LZ0_calc:.4f}, lK={lK_val:.4f}")
 
         # Prepare evaluation arguments
         eval_args = []
@@ -791,14 +794,16 @@ class BayesianOptimization:
                         print(result_line)
                         iteration_results += f"\n{result_line}"
 
-                        # Show calculated LZ0 and LKG values
+                        # Show calculated LZ0 and lK value
                         if self.fixed_params:
                             lF_val = params[3]  # lF is at index 3
-                            lK_val = params[2]  # lK is at index 2
+                            LKG_val = params[2]  # LKG is at index 2
                             LZ0_calc = self.fixed_params.get('LZ', 21.358) - lF_val
-                            x = self.fixed_params.get('max_lK', 70.0) - lK_val
-                            LKG_calc = self.fixed_params.get('longest_gap_length', 51.62) - x
-                            calc_info = f"    LZ0={LZ0_calc:.6f}, LKG={LKG_calc:.6f}"
+                            lK_val = (
+                                self.fixed_params.get('standard_LK', 70.0)
+                                - (self.fixed_params.get('standard_LKG', 51.62) - LKG_val)
+                            )
+                            calc_info = f"    LZ0={LZ0_calc:.6f}, lK={lK_val:.6f}"
                             print(calc_info)
                             iteration_results += f"\n{calc_info}"
 
