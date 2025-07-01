@@ -267,12 +267,15 @@ class BayesianOptimization:
         else:
             # Fallback: generate random and repair
             print("⚠️ BO: Could not generate valid individual, using repair method")
+            zmin = self.param_bounds['zeta']['min']
+            if zmin % 2 != 0:
+                zmin += 1
             individual = np.array([
                 random.uniform(self.param_bounds['dK']['min'], self.param_bounds['dK']['max']),
                 random.uniform(self.param_bounds['dZ']['min'], self.param_bounds['dZ']['max']),
                 random.uniform(self.param_bounds['lK']['min'], self.param_bounds['lK']['max']),
                 random.uniform(self.param_bounds['lF']['min'], self.param_bounds['lF']['max']),
-                random.randint(self.param_bounds['zeta']['min'], self.param_bounds['zeta']['max'])
+                random.choice(list(range(zmin, self.param_bounds['zeta']['max'] + 1, 2)))
             ])
 
             param_dict = {self.param_names[i]: individual[i] for i in range(len(self.param_names))}

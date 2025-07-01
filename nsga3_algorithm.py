@@ -115,12 +115,15 @@ class SimpleNSGA3:
         else:
             # Fallback: generate random and try to repair
             print("⚠️ Could not generate valid individual, using repair method")
+            zmin = self.param_bounds['zeta']['min']
+            if zmin % 2 != 0:
+                zmin += 1
             individual = [
                 random.uniform(self.param_bounds['dK']['min'], self.param_bounds['dK']['max']),
                 random.uniform(self.param_bounds['dZ']['min'], self.param_bounds['dZ']['max']),
                 random.uniform(self.param_bounds['lK']['min'], self.param_bounds['lK']['max']),
                 random.uniform(self.param_bounds['lF']['min'], self.param_bounds['lF']['max']),
-                random.randint(self.param_bounds['zeta']['min'], self.param_bounds['zeta']['max'])
+                random.choice(list(range(zmin, self.param_bounds['zeta']['max'] + 1, 2)))
             ]
 
             # Try to repair
@@ -428,12 +431,15 @@ class AdvancedNSGA3:
         else:
             # Fallback: generate random and try to repair
             print("⚠️ Could not generate valid individual, using repair method")
+            zmin = self.param_bounds['zeta']['min']
+            if zmin % 2 != 0:
+                zmin += 1
             individual = [
                 random.uniform(self.param_bounds['dK']['min'], self.param_bounds['dK']['max']),
                 random.uniform(self.param_bounds['dZ']['min'], self.param_bounds['dZ']['max']),
                 random.uniform(self.param_bounds['lK']['min'], self.param_bounds['lK']['max']),
                 random.uniform(self.param_bounds['lF']['min'], self.param_bounds['lF']['max']),
-                random.randint(self.param_bounds['zeta']['min'], self.param_bounds['zeta']['max'])
+                random.choice(list(range(zmin, self.param_bounds['zeta']['max'] + 1, 2)))
             ]
 
             # Try to repair
@@ -714,7 +720,12 @@ class AdvancedNSGA3:
             bounds = self.param_bounds[param_name]
 
             if param_name == 'zeta':
-                child_val = max(bounds['min'], min(bounds['max'], int(round(child_val))))
+                even_val = int(round(child_val / 2.0)) * 2
+                if even_val < bounds['min']:
+                    even_val = bounds['min'] if bounds['min'] % 2 == 0 else bounds['min'] + 1
+                if even_val > bounds['max']:
+                    even_val = bounds['max'] if bounds['max'] % 2 == 0 else bounds['max'] - 1
+                child_val = even_val
             else:
                 child_val = max(bounds['min'], min(bounds['max'], child_val))
 
@@ -751,7 +762,12 @@ class AdvancedNSGA3:
                 y = y + deltaq * (bounds['max'] - bounds['min'])
 
                 if param_name == 'zeta':
-                    y = max(bounds['min'], min(bounds['max'], int(round(y))))
+                    even_y = int(round(y / 2.0)) * 2
+                    if even_y < bounds['min']:
+                        even_y = bounds['min'] if bounds['min'] % 2 == 0 else bounds['min'] + 1
+                    if even_y > bounds['max']:
+                        even_y = bounds['max'] if bounds['max'] % 2 == 0 else bounds['max'] - 1
+                    y = even_y
                 else:
                     y = max(bounds['min'], min(bounds['max'], y))
 
