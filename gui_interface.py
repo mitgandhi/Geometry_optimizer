@@ -26,7 +26,7 @@ class OptimizationGUI:
             'param_bounds': {
                 'dK': {'min': 19.0, 'max': 20.0},
                 'dZ': {'min': 19.2, 'max': 20.0},
-                'lK': {'min': 50.0, 'max': 70.0},
+                'LKG': {'min': 50.0, 'max': 70.0},
                 'lF': {'min': 30.0, 'max': 40.0},
                 'zeta': {'min': 3, 'max': 7}
             },
@@ -38,8 +38,8 @@ class OptimizationGUI:
             },
             'fixed_params': {
                 'LZ': 21.358,
-                'longest_gap_length': 51.62,
-                'max_lK': 70.0
+                'standard_LKG': 51.62,
+                'standard_LK': 70.0
             }
         }
 
@@ -210,7 +210,7 @@ class OptimizationGUI:
         descriptions = {
             'dK': 'Cylinder diameter (mm)',
             'dZ': 'Piston diameter (mm)',
-            'lK': 'Cylinder length (mm)',
+            'LKG': 'Gap length parameter (mm)',
             'lF': 'Piston length (mm)',
             'zeta': 'Discretization parameter'
         }
@@ -218,7 +218,7 @@ class OptimizationGUI:
         # Create input widgets for each parameter
         self.bound_vars = {}
         row = 1
-        for param in ['dK', 'dZ', 'lK', 'lF', 'zeta']:
+        for param in ['dK', 'dZ', 'LKG', 'lF', 'zeta']:
             ttk.Label(bounds_frame, text=param).grid(row=row, column=0, padx=5, pady=2, sticky='w')
 
             # Min value
@@ -257,9 +257,9 @@ class OptimizationGUI:
         main_frame.pack(fill='both', expand=True, padx=10, pady=5)
 
         # Description
-        desc_text = """These fixed parameters are used for calculating LZ0 and LKG values during optimization:
+        desc_text = """These fixed parameters are used for calculating LZ0 and lK values during optimization:
 • LZ0 = LZ - lF (calculated for each iteration)
-• LKG = Longest Gap Length - (Max lK - current lK) (calculated for each iteration)"""
+• lK = Standard LK - (Standard LKG - LKG) (calculated for each iteration)"""
 
         desc_label = ttk.Label(main_frame, text=desc_text, justify='left', foreground='blue')
         desc_label.pack(anchor='w', pady=(0, 10))
@@ -283,22 +283,22 @@ class OptimizationGUI:
         lkg_frame = ttk.LabelFrame(main_frame, text="LKG Calculation Parameters", padding=10)
         lkg_frame.pack(fill='x', pady=5)
 
-        ttk.Label(lkg_frame, text="Longest Gap Length:").grid(row=0, column=0, sticky='w', padx=5, pady=2)
-        self.longest_gap_var = tk.DoubleVar(value=51.62)
-        gap_entry = ttk.Entry(lkg_frame, textvariable=self.longest_gap_var, width=12)
+        ttk.Label(lkg_frame, text="Standard LKG:").grid(row=0, column=0, sticky='w', padx=5, pady=2)
+        self.standard_lkg_var = tk.DoubleVar(value=51.62)
+        gap_entry = ttk.Entry(lkg_frame, textvariable=self.standard_lkg_var, width=12)
         gap_entry.grid(row=0, column=1, padx=5, pady=2)
         ttk.Label(lkg_frame, text="mm").grid(row=0, column=2, sticky='w', padx=2, pady=2)
-        ttk.Label(lkg_frame, text="Fixed gap length value").grid(row=0, column=3, sticky='w', padx=10, pady=2)
+        ttk.Label(lkg_frame, text="Reference gap length value").grid(row=0, column=3, sticky='w', padx=10, pady=2)
 
-        ttk.Label(lkg_frame, text="Max lK:").grid(row=1, column=0, sticky='w', padx=5, pady=2)
-        self.max_lk_var = tk.DoubleVar(value=70.0)
-        max_lk_entry = ttk.Entry(lkg_frame, textvariable=self.max_lk_var, width=12)
+        ttk.Label(lkg_frame, text="Standard LK:").grid(row=1, column=0, sticky='w', padx=5, pady=2)
+        self.standard_lk_var = tk.DoubleVar(value=70.0)
+        max_lk_entry = ttk.Entry(lkg_frame, textvariable=self.standard_lk_var, width=12)
         max_lk_entry.grid(row=1, column=1, padx=5, pady=2)
         ttk.Label(lkg_frame, text="mm").grid(row=1, column=2, sticky='w', padx=2, pady=2)
-        ttk.Label(lkg_frame, text="Maximum lK value from bounds").grid(row=1, column=3, sticky='w', padx=10, pady=2)
+        ttk.Label(lkg_frame, text="Reference LK value from bounds").grid(row=1, column=3, sticky='w', padx=10, pady=2)
 
         # Show calculation formula
-        formula_label2 = ttk.Label(lkg_frame, text="Formula: LKG = Longest Gap Length - (Max lK - current lK)",
+        formula_label2 = ttk.Label(lkg_frame, text="Formula: lK = Standard LK - (Standard LKG - LKG)",
                                    font=('Arial', 9, 'italic'))
         formula_label2.grid(row=2, column=0, columnspan=4, sticky='w', padx=5, pady=5)
 
@@ -320,24 +320,24 @@ class OptimizationGUI:
         sync_frame = ttk.Frame(main_frame)
         sync_frame.pack(fill='x', pady=10)
 
-        ttk.Button(sync_frame, text="Auto-sync Max lK from Parameter Bounds",
+        ttk.Button(sync_frame, text="Auto-sync Standard LK from Parameter Bounds",
                    command=self.sync_max_lk).pack(side='left', padx=5)
 
-        ttk.Label(sync_frame, text="(Updates Max lK to match the maximum lK bound)",
+        ttk.Label(sync_frame, text="(Updates Standard LK to match the maximum LKG bound)",
                   font=('Arial', 8, 'italic')).pack(side='left', padx=10)
 
     def update_calculation_example(self):
         """Update the calculation example based on current values"""
         try:
             lz_val = self.lz_var.get()
-            gap_length = self.longest_gap_var.get()
-            max_lk = self.max_lk_var.get()
+            gap_length = self.standard_lkg_var.get()
+            max_lk = self.standard_lk_var.get()
 
             # Use middle values from bounds for example
             if hasattr(self, 'bound_vars'):
                 try:
                     lf_example = (self.bound_vars['lF']['min'].get() + self.bound_vars['lF']['max'].get()) / 2
-                    lk_example = (self.bound_vars['lK']['min'].get() + self.bound_vars['lK']['max'].get()) / 2
+                    lk_example = (self.bound_vars['LKG']['min'].get() + self.bound_vars['LKG']['max'].get()) / 2
                 except:
                     lf_example = 35.0  # fallback
                     lk_example = 60.0  # fallback
@@ -347,19 +347,17 @@ class OptimizationGUI:
 
             # Calculate examples
             lz0_calc = lz_val - lf_example
-            x = max_lk - lk_example
-            lkg_calc = gap_length - x
+            lK_calc = max_lk - (gap_length - lk_example)
 
             example_text = f"""Example with current values:
 
-Given: lF = {lf_example:.1f} mm, lK = {lk_example:.1f} mm
+Given: lF = {lf_example:.1f} mm, LKG = {lk_example:.1f} mm
 
 LZ0 Calculation:
   LZ0 = {lz_val:.3f} - {lf_example:.1f} = {lz0_calc:.3f} mm
 
-LKG Calculation:
-  x = {max_lk:.1f} - {lk_example:.1f} = {x:.1f} mm
-  LKG = {gap_length:.2f} - {x:.1f} = {lkg_calc:.2f} mm"""
+lK Calculation:
+  lK = {max_lk:.1f} - ({gap_length:.2f} - {lk_example:.1f}) = {lK_calc:.2f} mm"""
 
             self.example_text.delete('1.0', tk.END)
             self.example_text.insert('1.0', example_text)
@@ -369,17 +367,17 @@ LKG Calculation:
             self.example_text.insert('1.0', f"Error calculating example: {e}")
 
     def sync_max_lk(self):
-        """Sync Max lK with the maximum lK bound"""
+        """Sync Standard LK with the maximum LKG bound"""
         try:
-            if hasattr(self, 'bound_vars') and 'lK' in self.bound_vars:
-                max_lk_bound = self.bound_vars['lK']['max'].get()
-                self.max_lk_var.set(max_lk_bound)
+            if hasattr(self, 'bound_vars') and 'LKG' in self.bound_vars:
+                max_lk_bound = self.bound_vars['LKG']['max'].get()
+                self.standard_lk_var.set(max_lk_bound)
                 self.update_calculation_example()
-                messagebox.showinfo("Sync Complete", f"Max lK updated to {max_lk_bound:.1f} mm")
+                messagebox.showinfo("Sync Complete", f"Standard LK updated to {max_lk_bound:.1f} mm")
             else:
                 messagebox.showwarning("Sync Failed", "Parameter bounds not available yet")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to sync Max lK: {e}")
+            messagebox.showerror("Error", f"Failed to sync Standard LK: {e}")
 
     def create_constraints_tab(self, parent):
         """Create constraints configuration tab"""
@@ -547,7 +545,7 @@ Memory Usage: {memory.percent:.1f}%
         defaults = {
             'dK': {'min': 19.0, 'max': 20.0},
             'dZ': {'min': 19.2, 'max': 20.0},
-            'lK': {'min': 50.0, 'max': 70.0},
+            'LKG': {'min': 50.0, 'max': 70.0},
             'lF': {'min': 30.0, 'max': 40.0},
             'zeta': {'min': 3, 'max': 7}
         }
@@ -557,7 +555,7 @@ Memory Usage: {memory.percent:.1f}%
         conservative = {
             'dK': {'min': 19.3, 'max': 19.7},
             'dZ': {'min': 19.4, 'max': 19.8},
-            'lK': {'min': 55.0, 'max': 65.0},
+            'LKG': {'min': 55.0, 'max': 65.0},
             'lF': {'min': 32.0, 'max': 38.0},
             'zeta': {'min': 4, 'max': 6}
         }
@@ -567,7 +565,7 @@ Memory Usage: {memory.percent:.1f}%
         aggressive = {
             'dK': {'min': 18.5, 'max': 20.5},
             'dZ': {'min': 18.8, 'max': 20.2},
-            'lK': {'min': 45.0, 'max': 75.0},
+            'LKG': {'min': 45.0, 'max': 75.0},
             'lF': {'min': 25.0, 'max': 45.0},
             'zeta': {'min': 2, 'max': 8}
         }
@@ -598,7 +596,7 @@ Memory Usage: {memory.percent:.1f}%
             test_params = {
                 'dK': (param_bounds['dK']['min'] + param_bounds['dK']['max']) / 2,
                 'dZ': (param_bounds['dZ']['min'] + param_bounds['dZ']['max']) / 2,
-                'lK': (param_bounds['lK']['min'] + param_bounds['lK']['max']) / 2,
+                'LKG': (param_bounds['LKG']['min'] + param_bounds['LKG']['max']) / 2,
                 'lF': (param_bounds['lF']['min'] + param_bounds['lF']['max']) / 2,
                 'zeta': int((param_bounds['zeta']['min'] + param_bounds['zeta']['max']) / 2)
             }
@@ -677,7 +675,7 @@ Memory Usage: {memory.percent:.1f}%
 
                 if valid_params:
                     result_text += f"Valid Set {i + 1}:\n"
-                    param_names = ['dK', 'dZ', 'lK', 'lF', 'zeta']
+                    param_names = ['dK', 'dZ', 'LKG', 'lF', 'zeta']
                     for j, param in enumerate(param_names):
                         if param == 'zeta':
                             result_text += f"  {param}: {int(valid_params[j])}\n"
@@ -835,8 +833,8 @@ hardware performance, and system load.
         # Fixed parameters for calculations
         config['fixed_params'] = {
             'LZ': self.lz_var.get(),
-            'longest_gap_length': self.longest_gap_var.get(),
-            'max_lK': self.max_lk_var.get()
+            'standard_LKG': self.standard_lkg_var.get(),
+            'standard_LK': self.standard_lk_var.get()
         }
 
         # Constraints
@@ -885,8 +883,8 @@ hardware performance, and system load.
             # Fixed parameters
             fixed_params = config.get('fixed_params', {})
             self.lz_var.set(fixed_params.get('LZ', 21.358))
-            self.longest_gap_var.set(fixed_params.get('longest_gap_length', 51.62))
-            self.max_lk_var.set(fixed_params.get('max_lK', 70.0))
+            self.standard_lkg_var.set(fixed_params.get('standard_LKG', 51.62))
+            self.standard_lk_var.set(fixed_params.get('standard_LK', 70.0))
 
             # Update calculation example
             self.update_calculation_example()
@@ -963,14 +961,14 @@ hardware performance, and system load.
             'param_bounds': {
                 'dK': {'min': 19.0, 'max': 20.0},
                 'dZ': {'min': 19.2, 'max': 20.0},
-                'lK': {'min': 50.0, 'max': 70.0},
+                'LKG': {'min': 50.0, 'max': 70.0},
                 'lF': {'min': 30.0, 'max': 40.0},
                 'zeta': {'min': 3, 'max': 7}
             },
             'fixed_params': {
                 'LZ': 21.358,
-                'longest_gap_length': 51.62,
-                'max_lK': 70.0
+                'standard_LKG': 51.62,
+                'standard_LK': 70.0
             },
             'constraints': {
                 'dK_less_than_dZ': {'active': True},
@@ -1017,16 +1015,16 @@ hardware performance, and system load.
             fixed_params = config.get('fixed_params', {})
             if fixed_params.get('LZ', 0) <= 0:
                 errors.append("LZ must be positive")
-            if fixed_params.get('longest_gap_length', 0) <= 0:
-                errors.append("Longest Gap Length must be positive")
-            if fixed_params.get('max_lK', 0) <= 0:
-                errors.append("Max lK must be positive")
+            if fixed_params.get('standard_LKG', 0) <= 0:
+                errors.append("Standard LKG must be positive")
+            if fixed_params.get('standard_LK', 0) <= 0:
+                errors.append("Standard LK must be positive")
 
-            # Validate Max lK against lK bounds
-            max_lk = fixed_params.get('max_lK', 0)
-            lk_max_bound = config['param_bounds']['lK']['max']
+            # Validate Standard LK against LKG bounds
+            max_lk = fixed_params.get('standard_LK', 0)
+            lk_max_bound = config['param_bounds']['LKG']['max']
             if max_lk < lk_max_bound:
-                errors.append(f"Max lK ({max_lk}) should be >= lK maximum bound ({lk_max_bound})")
+                errors.append(f"Standard LK ({max_lk}) should be >= LKG maximum bound ({lk_max_bound})")
 
             # Algorithm-specific validation
             if config['algorithm_type'] == 'Bayesian':
@@ -1072,12 +1070,12 @@ hardware performance, and system load.
             fixed_params_info = f"""
 Fixed Parameters for Calculations:
 - LZ: {fixed_params.get('LZ', 'Not set')} mm
-- Longest Gap Length: {fixed_params.get('longest_gap_length', 'Not set')} mm
-- Max lK: {fixed_params.get('max_lK', 'Not set')} mm
+- Standard LKG: {fixed_params.get('standard_LKG', 'Not set')} mm
+- Standard LK: {fixed_params.get('standard_LK', 'Not set')} mm
 
 During optimization:
 - LZ0 will be calculated as: LZ - lF
-- LKG will be calculated as: Longest Gap Length - (Max lK - current lK)"""
+ - lK will be calculated as: Standard LK - (Standard LKG - LKG)"""
 
             if config['algorithm_type'] == 'Bayesian':
                 batch_size = config.get('batch_size', 5)

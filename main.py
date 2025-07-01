@@ -87,7 +87,7 @@ def validate_config(config):
 
     # Check parameter bounds
     if 'param_bounds' in config:
-        required_params = ['dK', 'dZ', 'lK', 'lF', 'zeta']
+        required_params = ['dK', 'dZ', 'LKG', 'lF', 'zeta']
         for param in required_params:
             if param not in config['param_bounds']:
                 errors.append(f"Missing parameter bounds for: {param}")
@@ -131,7 +131,7 @@ def create_default_config():
         'param_bounds': {
             'dK': {'min': 19.0, 'max': 20.0},
             'dZ': {'min': 19.2, 'max': 20.0},
-            'lK': {'min': 50.0, 'max': 70.0},
+            'LKG': {'min': 50.0, 'max': 70.0},
             'lF': {'min': 30.0, 'max': 40.0},
             'zeta': {'min': 3, 'max': 7}
         },
@@ -310,7 +310,7 @@ def test_constraints_with_bounds(config):
 
     valid_params = cm.generate_valid_parameters(param_bounds)
     if valid_params:
-        param_names = ['dK', 'dZ', 'lK', 'lF', 'zeta']
+        param_names = ['dK', 'dZ', 'LKG', 'lF', 'zeta']
         print("✓ Generated valid parameters:")
         for i, param in enumerate(param_names):
             if param == 'zeta':
@@ -437,7 +437,7 @@ def run_optimization(config):
 
         if best_individuals:
             print(f"Found {len(best_individuals)} Pareto optimal solutions:")
-            param_names = ['dK', 'dZ', 'lK', 'lF', 'zeta']
+            param_names = ['dK', 'dZ', 'LKG', 'lF', 'zeta']
 
             # Final constraint validation
             cm = ConstraintManager()

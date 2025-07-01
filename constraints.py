@@ -10,7 +10,7 @@ Usage:
     constraint_manager.add_constraint("dK_less_than_dZ", lambda params: params['dK'] < params['dZ'])
 
     # Check if parameters satisfy all constraints
-    is_valid = constraint_manager.validate_parameters(dK=19.5, dZ=19.8, lK=60.0, lF=35.0, zeta=5)
+    is_valid = constraint_manager.validate_parameters(dK=19.5, dZ=19.8, LKG=60.0, lF=35.0, zeta=5)
 
     # Generate valid parameters
     valid_params = constraint_manager.generate_valid_parameters(param_bounds)
@@ -111,7 +111,7 @@ class ConstraintManager:
         Validate parameters against all active constraints
 
         Args:
-            **params: Parameter values (dK, dZ, lK, lF, zeta)
+            **params: Parameter values (dK, dZ, LKG, lF, zeta)
 
         Returns:
             bool: True if all constraints are satisfied
@@ -165,7 +165,7 @@ class ConstraintManager:
             max_attempts (int): Maximum attempts to generate valid parameters
 
         Returns:
-            list: [dK, dZ, lK, lF, zeta] or None if no valid parameters found
+            list: [dK, dZ, LKG, lF, zeta] or None if no valid parameters found
         """
         # Convert bounds format if needed (handle both dict and tuple formats)
         normalized_bounds = {}
@@ -184,14 +184,14 @@ class ConstraintManager:
             params = {
                 'dK': random.uniform(normalized_bounds['dK']['min'], normalized_bounds['dK']['max']),
                 'dZ': random.uniform(normalized_bounds['dZ']['min'], normalized_bounds['dZ']['max']),
-                'lK': random.uniform(normalized_bounds['lK']['min'], normalized_bounds['lK']['max']),
+                'LKG': random.uniform(normalized_bounds['LKG']['min'], normalized_bounds['LKG']['max']),
                 'lF': random.uniform(normalized_bounds['lF']['min'], normalized_bounds['lF']['max']),
                 'zeta': random.randint(normalized_bounds['zeta']['min'], normalized_bounds['zeta']['max'])
             }
 
             # Check if parameters satisfy all constraints
             if self.validate_parameters(**params):
-                return [params['dK'], params['dZ'], params['lK'], params['lF'], params['zeta']]
+                return [params['dK'], params['dZ'], params['LKG'], params['lF'], params['zeta']]
 
         print(f"⚠️ Could not generate valid parameters after {max_attempts} attempts")
         return None

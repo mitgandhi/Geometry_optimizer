@@ -34,8 +34,8 @@ def evaluate_individual_wrapper(args):
         print(f"Warning: Could not set {algorithm_type} worker {individual_id} process affinity: {e}")
 
     # Run evaluation - fsti_gap.exe will get cores 1-23 and run without timeout
-    dK, dZ, lK, lF, zeta = params
-    return optimizer.evaluate_individual(individual_id, dK, dZ, lK, lF, zeta, generation,
+    dK, dZ, LKG, lF, zeta = params
+    return optimizer.evaluate_individual(individual_id, dK, dZ, LKG, lF, zeta, generation,
                                          algorithm_type=algorithm_type, fixed_params=fixed_params)
 
 
@@ -118,24 +118,24 @@ class SimpleNSGA3:
             individual = [
                 random.uniform(self.param_bounds['dK']['min'], self.param_bounds['dK']['max']),
                 random.uniform(self.param_bounds['dZ']['min'], self.param_bounds['dZ']['max']),
-                random.uniform(self.param_bounds['lK']['min'], self.param_bounds['lK']['max']),
+                random.uniform(self.param_bounds['LKG']['min'], self.param_bounds['LKG']['max']),
                 random.uniform(self.param_bounds['lF']['min'], self.param_bounds['lF']['max']),
                 random.randint(self.param_bounds['zeta']['min'], self.param_bounds['zeta']['max'])
             ]
 
             # Try to repair
             param_dict = {
-                'dK': individual[0], 'dZ': individual[1], 'lK': individual[2],
+                'dK': individual[0], 'dZ': individual[1], 'LKG': individual[2],
                 'lF': individual[3], 'zeta': individual[4]
             }
             repaired = self.constraint_manager.repair_parameters(param_dict, self.param_bounds)
 
-            return [repaired['dK'], repaired['dZ'], repaired['lK'], repaired['lF'], repaired['zeta']]
+            return [repaired['dK'], repaired['dZ'], repaired['LKG'], repaired['lF'], repaired['zeta']]
 
     def validate_individual(self, individual):
         """Check if individual satisfies all constraints"""
         params = {
-            'dK': individual[0], 'dZ': individual[1], 'lK': individual[2],
+            'dK': individual[0], 'dZ': individual[1], 'LKG': individual[2],
             'lF': individual[3], 'zeta': individual[4]
         }
         return self.constraint_manager.validate_parameters(**params)
@@ -143,11 +143,11 @@ class SimpleNSGA3:
     def repair_individual(self, individual):
         """Repair individual to satisfy constraints"""
         params = {
-            'dK': individual[0], 'dZ': individual[1], 'lK': individual[2],
+            'dK': individual[0], 'dZ': individual[1], 'LKG': individual[2],
             'lF': individual[3], 'zeta': individual[4]
         }
         repaired = self.constraint_manager.repair_parameters(params, self.param_bounds)
-        return [repaired['dK'], repaired['dZ'], repaired['lK'], repaired['lF'], repaired['zeta']]
+        return [repaired['dK'], repaired['dZ'], repaired['LKG'], repaired['lF'], repaired['zeta']]
 
     def evaluate_population(self, population, generation):
         """Evaluate population in parallel using ALL available cores simultaneously - NO TIMEOUT"""
@@ -300,14 +300,16 @@ class SimpleNSGA3:
                     print(result_line)
                     pareto_results += f"\n{result_line}"
 
-                    # Show calculated LZ0 and LKG values
+                    # Show calculated LZ0 and lK value
                     if self.fixed_params:
                         lF_val = params[3]  # lF is at index 3
-                        lK_val = params[2]  # lK is at index 2
+                        LKG_val = params[2]  # LKG is at index 2
                         LZ0_calc = self.fixed_params.get('LZ', 21.358) - lF_val
-                        x = self.fixed_params.get('max_lK', 70.0) - lK_val
-                        LKG_calc = self.fixed_params.get('longest_gap_length', 51.62) - x
-                        calc_info = f"    LZ0={LZ0_calc:.3f}, LKG={LKG_calc:.3f}"
+                        lK_val = (
+                            self.fixed_params.get('standard_LK', 70.0)
+                            - (self.fixed_params.get('standard_LKG', 51.62) - LKG_val)
+                        )
+                        calc_info = f"    LZ0={LZ0_calc:.3f}, lK={lK_val:.3f}"
                         print(calc_info)
                         pareto_results += f"\n{calc_info}"
 
@@ -431,24 +433,24 @@ class AdvancedNSGA3:
             individual = [
                 random.uniform(self.param_bounds['dK']['min'], self.param_bounds['dK']['max']),
                 random.uniform(self.param_bounds['dZ']['min'], self.param_bounds['dZ']['max']),
-                random.uniform(self.param_bounds['lK']['min'], self.param_bounds['lK']['max']),
+                random.uniform(self.param_bounds['LKG']['min'], self.param_bounds['LKG']['max']),
                 random.uniform(self.param_bounds['lF']['min'], self.param_bounds['lF']['max']),
                 random.randint(self.param_bounds['zeta']['min'], self.param_bounds['zeta']['max'])
             ]
 
             # Try to repair
             param_dict = {
-                'dK': individual[0], 'dZ': individual[1], 'lK': individual[2],
+                'dK': individual[0], 'dZ': individual[1], 'LKG': individual[2],
                 'lF': individual[3], 'zeta': individual[4]
             }
             repaired = self.constraint_manager.repair_parameters(param_dict, self.param_bounds)
 
-            return [repaired['dK'], repaired['dZ'], repaired['lK'], repaired['lF'], repaired['zeta']]
+            return [repaired['dK'], repaired['dZ'], repaired['LKG'], repaired['lF'], repaired['zeta']]
 
     def validate_individual(self, individual):
         """Check if individual satisfies all constraints"""
         params = {
-            'dK': individual[0], 'dZ': individual[1], 'lK': individual[2],
+            'dK': individual[0], 'dZ': individual[1], 'LKG': individual[2],
             'lF': individual[3], 'zeta': individual[4]
         }
         return self.constraint_manager.validate_parameters(**params)
@@ -456,11 +458,11 @@ class AdvancedNSGA3:
     def repair_individual(self, individual):
         """Repair individual to satisfy constraints"""
         params = {
-            'dK': individual[0], 'dZ': individual[1], 'lK': individual[2],
+            'dK': individual[0], 'dZ': individual[1], 'LKG': individual[2],
             'lF': individual[3], 'zeta': individual[4]
         }
         repaired = self.constraint_manager.repair_parameters(params, self.param_bounds)
-        return [repaired['dK'], repaired['dZ'], repaired['lK'], repaired['lF'], repaired['zeta']]
+        return [repaired['dK'], repaired['dZ'], repaired['LKG'], repaired['lF'], repaired['zeta']]
 
     def evaluate_population(self, population, generation):
         """Evaluate population in parallel without timeout"""
@@ -582,14 +584,16 @@ class AdvancedNSGA3:
                     print(result_line)
                     pareto_results += f"\n{result_line}"
 
-                    # Show calculated LZ0 and LKG values
+                    # Show calculated LZ0 and lK value
                     if self.fixed_params:
                         lF_val = params[3]  # lF is at index 3
-                        lK_val = params[2]  # lK is at index 2
+                        LKG_val = params[2]  # LKG is at index 2
                         LZ0_calc = self.fixed_params.get('LZ', 21.358) - lF_val
-                        x = self.fixed_params.get('max_lK', 70.0) - lK_val
-                        LKG_calc = self.fixed_params.get('longest_gap_length', 51.62) - x
-                        calc_info = f"    LZ0={LZ0_calc:.3f}, LKG={LKG_calc:.3f}"
+                        lK_val = (
+                            self.fixed_params.get('standard_LK', 70.0)
+                            - (self.fixed_params.get('standard_LKG', 51.62) - LKG_val)
+                        )
+                        calc_info = f"    LZ0={LZ0_calc:.3f}, lK={lK_val:.3f}"
                         print(calc_info)
                         pareto_results += f"\n{calc_info}"
 
@@ -709,7 +713,7 @@ class AdvancedNSGA3:
                 child_val = parent1[i]
 
             # Apply bounds
-            param_names = ['dK', 'dZ', 'lK', 'lF', 'zeta']
+            param_names = ['dK', 'dZ', 'LKG', 'lF', 'zeta']
             param_name = param_names[i]
             bounds = self.param_bounds[param_name]
 
@@ -725,7 +729,7 @@ class AdvancedNSGA3:
     def polynomial_mutation(self, individual, eta_m=20):
         """Polynomial mutation with constraint handling"""
         mutated = individual.copy()
-        param_names = ['dK', 'dZ', 'lK', 'lF', 'zeta']
+        param_names = ['dK', 'dZ', 'LKG', 'lF', 'zeta']
 
         for i in range(len(mutated)):
             if random.random() < 0.1:  # Mutation probability
