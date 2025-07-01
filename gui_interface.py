@@ -259,7 +259,7 @@ class OptimizationGUI:
         # Description
         desc_text = """These fixed parameters are used for calculating LZ0 and lK values during optimization:
 • LZ0 = LZ - lF (calculated for each iteration)
-• lK = Standard LK - (Standard LKG - LKG) (calculated for each iteration)"""
+• lK = Standard LK + (Standard LKG - LKG) (calculated for each iteration)"""
 
         desc_label = ttk.Label(main_frame, text=desc_text, justify='left', foreground='blue')
         desc_label.pack(anchor='w', pady=(0, 10))

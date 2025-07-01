@@ -186,13 +186,13 @@ class PistonOptimizer:
         # Derive lK from provided LKG value
         lK_calculated = (
             fixed_params.get('standard_LK', 70.0)
-            - (fixed_params.get('standard_LKG', 51.62) - LKG)
+            + (fixed_params.get('standard_LKG', 51.62) - LKG)
         )
 
         print(f"Calculations for {sim_folder.name}:")
         print(f"  LZ0 = {fixed_params.get('LZ', 21.358)} - {lF} = {LZ0_calculated:.6f}")
         print(
-            f"  lK = {fixed_params.get('standard_LK', 70.0)} - ({fixed_params.get('standard_LKG', 51.62)} - {LKG}) = {lK_calculated:.6f}")
+            f"  lK = {fixed_params.get('standard_LK', 70.0)} + ({fixed_params.get('standard_LKG', 51.62)} - {LKG}) = {lK_calculated:.6f}")
 
         # Update geometry parameters
         try:
