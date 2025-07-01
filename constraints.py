@@ -180,7 +180,7 @@ class ConstraintManager:
                 raise ValueError(f"Invalid bounds format for {param}: {bounds}")
 
         for attempt in range(max_attempts):
-            # Generate random parameters within bounds
+
             params = {
                 'dK': random.uniform(normalized_bounds['dK']['min'], normalized_bounds['dK']['max']),
                 'dZ': random.uniform(normalized_bounds['dZ']['min'], normalized_bounds['dZ']['max']),
@@ -188,6 +188,8 @@ class ConstraintManager:
                 'lF': random.uniform(normalized_bounds['lF']['min'], normalized_bounds['lF']['max']),
                 'zeta': random.randint(normalized_bounds['zeta']['min'], normalized_bounds['zeta']['max'])
             }
+
+            
 
             # Check if parameters satisfy all constraints
             if self.validate_parameters(**params):
@@ -250,6 +252,16 @@ class ConstraintManager:
                 repaired['dZ'] = normalized_bounds['dZ']['max']
                 repaired['dK'] = repaired['dZ'] - max_diff
                 repaired['dK'] = max(repaired['dK'], normalized_bounds['dK']['min'])
+
+        # Ensure zeta is even and within bounds
+        zmin = normalized_bounds['zeta']['min']
+        zmax = normalized_bounds['zeta']['max']
+        zeta_even = int(round(repaired.get('zeta', zmin) / 2.0)) * 2
+        if zeta_even < zmin:
+            zeta_even = zmin if zmin % 2 == 0 else zmin + 1
+        if zeta_even > zmax:
+            zeta_even = zmax if zmax % 2 == 0 else zmax - 1
+        repaired['zeta'] = zeta_even
 
         return repaired
 

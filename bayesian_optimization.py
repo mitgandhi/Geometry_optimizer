@@ -269,6 +269,7 @@ class BayesianOptimization:
         else:
             # Fallback: generate random and repair
             print("⚠️ BO: Could not generate valid individual, using repair method")
+
             individual = np.array([
                 random.uniform(self.param_bounds['dK']['min'], self.param_bounds['dK']['max']),
                 random.uniform(self.param_bounds['dZ']['min'], self.param_bounds['dZ']['max']),
@@ -276,6 +277,7 @@ class BayesianOptimization:
                 random.uniform(self.param_bounds['lF']['min'], self.param_bounds['lF']['max']),
                 random.randint(self.param_bounds['zeta']['min'], self.param_bounds['zeta']['max'])
             ])
+
 
             param_dict = {self.param_names[i]: individual[i] for i in range(len(self.param_names))}
             repaired = self.constraint_manager.repair_parameters(param_dict, self.param_bounds)
