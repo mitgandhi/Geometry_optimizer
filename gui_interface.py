@@ -298,7 +298,7 @@ class OptimizationGUI:
         ttk.Label(lkg_frame, text="Reference LK value from bounds").grid(row=1, column=3, sticky='w', padx=10, pady=2)
 
         # Show calculation formula
-        formula_label2 = ttk.Label(lkg_frame, text="Formula: lK = Standard LK - (Standard LKG - LKG)",
+        formula_label2 = ttk.Label(lkg_frame, text="Formula: lK = Standard LK + (Standard LKG - LKG)",
                                    font=('Arial', 9, 'italic'))
         formula_label2.grid(row=2, column=0, columnspan=4, sticky='w', padx=5, pady=5)
 
@@ -347,7 +347,7 @@ class OptimizationGUI:
 
             # Calculate examples
             lz0_calc = lz_val - lf_example
-            lK_calc = max_lk - (gap_length - lk_example)
+            lK_calc = max_lk + (gap_length - lk_example)
 
             example_text = f"""Example with current values:
 
@@ -357,7 +357,7 @@ LZ0 Calculation:
   LZ0 = {lz_val:.3f} - {lf_example:.1f} = {lz0_calc:.3f} mm
 
 lK Calculation:
-  lK = {max_lk:.1f} - ({gap_length:.2f} - {lk_example:.1f}) = {lK_calc:.2f} mm"""
+  lK = {max_lk:.1f} + ({gap_length:.2f} - {lk_example:.1f}) = {lK_calc:.2f} mm"""
 
             self.example_text.delete('1.0', tk.END)
             self.example_text.insert('1.0', example_text)
@@ -1075,7 +1075,7 @@ Fixed Parameters for Calculations:
 
 During optimization:
 - LZ0 will be calculated as: LZ - lF
- - lK will be calculated as: Standard LK - (Standard LKG - LKG)"""
+ - lK will be calculated as: Standard LK + (Standard LKG - LKG)"""
 
             if config['algorithm_type'] == 'Bayesian':
                 batch_size = config.get('batch_size', 5)

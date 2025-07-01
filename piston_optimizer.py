@@ -572,7 +572,7 @@ class PistonOptimizer:
                     f.write(f"Standard LK: {fixed_params.get('standard_LK', 'Not set')}\n")
                     f.write("Calculations:\n")
                     f.write("  LZ0 = LZ - lF\n")
-                    f.write("  lK = standard_LK - (standard_LKG - LKG)\n\n")
+                    f.write("  lK = standard_LK + (standard_LKG - LKG)\n\n")
 
                 # Constraint information
                 constraints_config = config.get('constraints', {})
@@ -649,7 +649,7 @@ class PistonOptimizer:
                             LZ0_calc = fixed_params.get('LZ', 21.358) - lF_val
                             lK_val = (
                                 fixed_params.get('standard_LK', 70.0)
-                                - (fixed_params.get('standard_LKG', 51.62) - LKG_val)
+                                + (fixed_params.get('standard_LKG', 51.62) - LKG_val)
                             )
                             f.write(f"  Calculated LZ0: {LZ0_calc:.6f}\n")
                             f.write(f"  Calculated lK: {lK_val:.6f}\n")
