@@ -98,7 +98,7 @@ def evaluate_individual_wrapper_bo(args):
             LZ0_calc = fixed_params.get('LZ', 21.358) - lF
             lK_val = (
                 fixed_params.get('standard_LK', 70.0)
-                - (fixed_params.get('standard_LKG', 51.62) - LKG)
+                + (fixed_params.get('standard_LKG', 51.62) - LKG)
             )
             print(f"BO Worker {individual_id} calculations: LZ0={LZ0_calc:.6f}, lK={lK_val:.6f}")
 
@@ -336,7 +336,7 @@ class BayesianOptimization:
                 LZ0_calc = self.fixed_params.get('LZ', 21.358) - lF
                 lK_val = (
                     self.fixed_params.get('standard_LK', 70.0)
-                    - (self.fixed_params.get('standard_LKG', 51.62) - LKG)
+                    + (self.fixed_params.get('standard_LKG', 51.62) - LKG)
                 )
                 print(f"    Calculated: LZ0={LZ0_calc:.4f}, lK={lK_val:.4f}")
 
@@ -801,7 +801,7 @@ class BayesianOptimization:
                             LZ0_calc = self.fixed_params.get('LZ', 21.358) - lF_val
                             lK_val = (
                                 self.fixed_params.get('standard_LK', 70.0)
-                                - (self.fixed_params.get('standard_LKG', 51.62) - LKG_val)
+                                + (self.fixed_params.get('standard_LKG', 51.62) - LKG_val)
                             )
                             calc_info = f"    LZ0={LZ0_calc:.6f}, lK={lK_val:.6f}"
                             print(calc_info)
