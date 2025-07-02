@@ -177,7 +177,9 @@ class PistonOptimizer:
             fixed_params = {
                 'LZ': 21.358,  # Default value from geometry.txt
                 'standard_LKG': 51.62,  # Default reference value
-                'standard_LK': 70.0  # Default reference LK
+                'standard_LK': 70.0,  # Default reference LK
+                'standard_LSK': 0.0,  # Default CG distance
+                'lsk_slope': 0.0      # Default slope for CG shift
             }
 
         # Calculate LZ0 = LZ - lF
@@ -189,10 +191,19 @@ class PistonOptimizer:
             - (fixed_params.get('standard_LKG', 51.62) - LKG)
         )
 
+        # Calculate lSK (center of gravity distance)
+        lSK_calculated = (
+            fixed_params.get('standard_LSK', 0.0)
+            - fixed_params.get('lsk_slope', 0.0)
+            * (fixed_params.get('standard_LK', 70.0) - lK_calculated)
+        )
+
         print(f"Calculations for {sim_folder.name}:")
         print(f"  LZ0 = {fixed_params.get('LZ', 21.358)} - {lF} = {LZ0_calculated:.6f}")
         print(
             f"  lK = {fixed_params.get('standard_LK', 70.0)} - ({fixed_params.get('standard_LKG', 51.62)} - {LKG}) = {lK_calculated:.6f}")
+        print(
+            f"  lSK = {fixed_params.get('standard_LSK', 0.0)} - {fixed_params.get('lsk_slope', 0.0)} * ({fixed_params.get('standard_LK', 70.0)} - {lK_calculated:.6f}) = {lSK_calculated:.6f}")
 
         # Update geometry parameters
         try:
@@ -205,6 +216,7 @@ class PistonOptimizer:
             # New calculated parameters
             self._replace_in_file(geo_path, 'lZ0', f"{LZ0_calculated:.6f}")
             self._replace_in_file(geo_path, 'lKG', f"{LKG:.6f}")
+            self._replace_in_file(geo_path, 'lSK', f"{lSK_calculated:.6f}")
 
         except Exception as e:
             print(f"Warning: Could not modify geometry file: {e}")

@@ -302,6 +302,24 @@ class OptimizationGUI:
                                    font=('Arial', 9, 'italic'))
         formula_label2.grid(row=2, column=0, columnspan=4, sticky='w', padx=5, pady=5)
 
+        # LSK calculation parameters
+        lsk_frame = ttk.LabelFrame(main_frame, text="LSK Calculation Parameters", padding=10)
+        lsk_frame.pack(fill='x', pady=5)
+
+        ttk.Label(lsk_frame, text="Standard LSK:").grid(row=0, column=0, sticky='w', padx=5, pady=2)
+        self.standard_lsk_var = tk.DoubleVar(value=0.0)
+        lsk_entry = ttk.Entry(lsk_frame, textvariable=self.standard_lsk_var, width=12)
+        lsk_entry.grid(row=0, column=1, padx=5, pady=2)
+        ttk.Label(lsk_frame, text="mm").grid(row=0, column=2, sticky='w', padx=2, pady=2)
+        ttk.Label(lsk_frame, text="Standard CG distance").grid(row=0, column=3, sticky='w', padx=10, pady=2)
+
+        ttk.Label(lsk_frame, text="Slope:").grid(row=1, column=0, sticky='w', padx=5, pady=2)
+        self.lsk_slope_var = tk.DoubleVar(value=0.0)
+        slope_entry = ttk.Entry(lsk_frame, textvariable=self.lsk_slope_var, width=12)
+        slope_entry.grid(row=1, column=1, padx=5, pady=2)
+        ttk.Label(lsk_frame, text="-").grid(row=1, column=2, sticky='w', padx=2, pady=2)
+        ttk.Label(lsk_frame, text="Slope for CG shift vs LK").grid(row=1, column=3, sticky='w', padx=10, pady=2)
+
         # Calculation example
         example_frame = ttk.LabelFrame(main_frame, text="Calculation Example", padding=10)
         example_frame.pack(fill='x', pady=5)
@@ -349,7 +367,12 @@ class OptimizationGUI:
             lz0_calc = lz_val - lf_example
             lK_calc = max_lk - (gap_length - lk_example)
 
-            example_text = f"""Example with current values:
+            lSK_calc = (
+                self.standard_lsk_var.get()
+                - self.lsk_slope_var.get() * (max_lk - lK_calc)
+            )
+
+        example_text = f"""Example with current values:
 
 Given: lF = {lf_example:.1f} mm, LKG = {lk_example:.1f} mm
 
@@ -357,7 +380,10 @@ LZ0 Calculation:
   LZ0 = {lz_val:.3f} - {lf_example:.1f} = {lz0_calc:.3f} mm
 
 lK Calculation:
-  lK = {max_lk:.1f} - ({gap_length:.2f} - {lk_example:.1f}) = {lK_calc:.2f} mm"""
+  lK = {max_lk:.1f} - ({gap_length:.2f} - {lk_example:.1f}) = {lK_calc:.2f} mm
+
+LSK Calculation:
+  lSK = {self.standard_lsk_var.get():.2f} - {self.lsk_slope_var.get():.2f} * ({max_lk:.1f} - {lK_calc:.2f}) = {lSK_calc:.2f} mm"""
 
             self.example_text.delete('1.0', tk.END)
             self.example_text.insert('1.0', example_text)
@@ -834,7 +860,9 @@ hardware performance, and system load.
         config['fixed_params'] = {
             'LZ': self.lz_var.get(),
             'standard_LKG': self.standard_lkg_var.get(),
-            'standard_LK': self.standard_lk_var.get()
+            'standard_LK': self.standard_lk_var.get(),
+            'standard_LSK': self.standard_lsk_var.get(),
+            'lsk_slope': self.lsk_slope_var.get()
         }
 
         # Constraints
@@ -885,6 +913,8 @@ hardware performance, and system load.
             self.lz_var.set(fixed_params.get('LZ', 21.358))
             self.standard_lkg_var.set(fixed_params.get('standard_LKG', 51.62))
             self.standard_lk_var.set(fixed_params.get('standard_LK', 70.0))
+            self.standard_lsk_var.set(fixed_params.get('standard_LSK', 0.0))
+            self.lsk_slope_var.set(fixed_params.get('lsk_slope', 0.0))
 
             # Update calculation example
             self.update_calculation_example()
@@ -968,7 +998,9 @@ hardware performance, and system load.
             'fixed_params': {
                 'LZ': 21.358,
                 'standard_LKG': 51.62,
-                'standard_LK': 70.0
+                'standard_LK': 70.0,
+                'standard_LSK': 0.0,
+                'lsk_slope': 0.0
             },
             'constraints': {
                 'dK_less_than_dZ': {'active': True},
@@ -1019,6 +1051,10 @@ hardware performance, and system load.
                 errors.append("Standard LKG must be positive")
             if fixed_params.get('standard_LK', 0) <= 0:
                 errors.append("Standard LK must be positive")
+            if fixed_params.get('standard_LSK', 0) < 0:
+                errors.append("Standard LSK cannot be negative")
+            if fixed_params.get('lsk_slope', None) is None:
+                errors.append("LSK slope must be specified")
 
             # Validate Standard LK against LKG bounds
             max_lk = fixed_params.get('standard_LK', 0)
@@ -1072,10 +1108,13 @@ Fixed Parameters for Calculations:
 - LZ: {fixed_params.get('LZ', 'Not set')} mm
 - Standard LKG: {fixed_params.get('standard_LKG', 'Not set')} mm
 - Standard LK: {fixed_params.get('standard_LK', 'Not set')} mm
+- Standard LSK: {fixed_params.get('standard_LSK', 'Not set')} mm
+- LSK slope: {fixed_params.get('lsk_slope', 'Not set')}
 
 During optimization:
 - LZ0 will be calculated as: LZ - lF
- - lK will be calculated as: Standard LK - (Standard LKG - LKG)"""
+ - lK will be calculated as: Standard LK - (Standard LKG - LKG)
+ - lSK will be calculated as: Standard LSK - slope * (Standard LK - lK)"""
 
             if config['algorithm_type'] == 'Bayesian':
                 batch_size = config.get('batch_size', 5)
