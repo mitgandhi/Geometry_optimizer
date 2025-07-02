@@ -372,18 +372,18 @@ class OptimizationGUI:
                 - self.lsk_slope_var.get() * (max_lk - lK_calc)
             )
 
-        example_text = f"""Example with current values:
-
-Given: lF = {lf_example:.1f} mm, LKG = {lk_example:.1f} mm
-
-LZ0 Calculation:
-  LZ0 = {lz_val:.3f} - {lf_example:.1f} = {lz0_calc:.3f} mm
-
-lK Calculation:
-  lK = {max_lk:.1f} - ({gap_length:.2f} - {lk_example:.1f}) = {lK_calc:.2f} mm
-
-LSK Calculation:
-  lSK = {self.standard_lsk_var.get():.2f} - {self.lsk_slope_var.get():.2f} * ({max_lk:.1f} - {lK_calc:.2f}) = {lSK_calc:.2f} mm"""
+            example_text = f"""Example with current values:
+    
+    Given: lF = {lf_example:.1f} mm, LKG = {lk_example:.1f} mm
+    
+    LZ0 Calculation:
+      LZ0 = {lz_val:.3f} - {lf_example:.1f} = {lz0_calc:.3f} mm
+    
+    lK Calculation:
+      lK = {max_lk:.1f} - ({gap_length:.2f} - {lk_example:.1f}) = {lK_calc:.2f} mm
+    
+    LSK Calculation:
+      lSK = {self.standard_lsk_var.get():.2f} - {self.lsk_slope_var.get():.2f} * ({max_lk:.1f} - {lK_calc:.2f}) = {lSK_calc:.2f} mm"""
 
             self.example_text.delete('1.0', tk.END)
             self.example_text.insert('1.0', example_text)
