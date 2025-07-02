@@ -142,6 +142,13 @@ def create_default_config():
                 'min_difference': 0.1,
                 'max_difference': 0.8
             }
+        },
+        'fixed_params': {
+            'LZ': 21.358,
+            'standard_LKG': 51.62,
+            'standard_LK': 70.0,
+            'standard_LSK': 0.0,
+            'lsk_slope': 0.0
         }
     }
 
